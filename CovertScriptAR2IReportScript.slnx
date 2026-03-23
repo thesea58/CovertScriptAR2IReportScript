@@ -1,2 +1,9 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ConvertScript/ConvertScript.csproj" />
+    <Project Path="src/KKReport.Scripts/KKReport.Scripts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ConvertScript.Tests/ConvertScript.Tests.csproj" />
+  </Folder>
 </Solution>
