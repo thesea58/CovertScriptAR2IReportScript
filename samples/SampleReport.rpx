@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ActiveReport BackColor="White" ColumnSpacing="0in" Columns="1" Font="Arial, 10pt" ForeColor="Black" MarginBottom="1in" MarginLeft="1in" MarginRight="1in" MarginTop="1in" Name="SampleReport" PaperHeight="11in" PaperWidth="8.5in" PrintWidth="6.5in" Version="2.0" XMLData="">
+  <Sections>
+    <PageHeader Name="PageHeader" Height="0.625in" BackColor="Transparent" CanGrow="True" CanShrink="False" OnFormat="PageHeader_Format">
+      <Controls>
+        <Label Name="lblTitle" Height="0.25in" Left="0in" Text="売上レポート" Top="0in" Width="3in" Font="Arial, 14pt, style=Bold" OnBeforePrint="lblTitle_BeforePrint" />
+        <Label Name="lblDate" Height="0.25in" Left="4in" Text="日付" Top="0in" Width="2in" />
+      </Controls>
+    </PageHeader>
+    <Detail Name="detail" Height="0.25in" BackColor="Transparent" CanGrow="True" CanShrink="True" OnFormat="detail_Format" OnBeforePrint="detail_BeforePrint">
+      <Controls>
+        <TextBox Name="txtProductName" DataField="ProductName" Height="0.25in" Left="0in" Top="0in" Width="2in" />
+        <TextBox Name="txtAmount" DataField="Amount" Height="0.25in" Left="2in" Top="0in" Width="1in" OutputFormat="¥#,##0" />
+        <TextBox Name="txtTax" Height="0.25in" Left="3in" Top="0in" Width="1in" OnBeforePrint="txtTax_BeforePrint" />
+      </Controls>
+    </Detail>
+    <GroupHeader Name="GroupHeader1" Height="0.25in" DataField="Category" OnFormat="GroupHeader1_Format">
+      <Controls>
+        <Label Name="lblCategory" Height="0.25in" Left="0in" Text="カテゴリ" Top="0in" Width="2in" Font="Arial, 10pt, style=Bold" />
+        <TextBox Name="txtCategory" DataField="Category" Height="0.25in" Left="1in" Top="0in" Width="2in" />
+      </Controls>
+    </GroupHeader>
+    <GroupFooter Name="GroupFooter1" Height="0.25in" OnFormat="GroupFooter1_Format">
+      <Controls>
+        <Label Name="lblSubTotal" Height="0.25in" Left="0in" Text="小計" Top="0in" Width="1in" />
+        <TextBox Name="txtSubTotal" DataField="Amount" Height="0.25in" Left="1in" Top="0in" Width="1in" SummaryFunc="Sum" SummaryGroup="GroupHeader1" SummaryType="SubTotal" OutputFormat="¥#,##0" />
+      </Controls>
+    </GroupFooter>
+    <PageFooter Name="PageFooter" Height="0.25in" BackColor="Transparent" OnFormat="PageFooter_Format">
+      <Controls>
+        <Label Name="lblPage" Height="0.25in" Left="0in" Text="ページ:" Top="0in" Width="0.5in" />
+        <TextBox Name="txtPage" Height="0.25in" Left="0.5in" Top="0in" Width="0.5in" OnBeforePrint="txtPage_BeforePrint" />
+      </Controls>
+    </PageFooter>
+  </Sections>
+  <Script Language="C#">
+    <![CDATA[
+// スクリプトレベル変数
+private int rowCount = 0;
+private decimal totalAmount = 0m;
+private string currentCategory = string.Empty;
+
+// レポート開始イベントハンドラ
+private void Report_ReportStart(object sender, EventArgs e)
+{
+    rowCount = 0;
+    totalAmount = 0m;
+    currentCategory = string.Empty;
+}
+
+// レポート終了イベントハンドラ
+private void Report_ReportEnd(object sender, EventArgs e)
+{
+    // 合計行数を出力
+    System.Diagnostics.Debug.WriteLine("合計行数: " + rowCount);
+    System.Diagnostics.Debug.WriteLine("合計金額: " + totalAmount.ToString("¥#,##0"));
+}
+
+// データ取得イベントハンドラ
+private void Report_FetchData(object sender, GrapeCity.ActiveReports.SectionReportEventArgs eArgs)
+{
+    if (eArgs.EOF)
+        return;
+    totalAmount += Convert.ToDecimal(eArgs.GetValue("Amount"));
+}
+
+// ページヘッダーフォーマットイベントハンドラ
+private void PageHeader_Format(object sender, EventArgs e)
+{
+    lblDate.Text = "日付: " + DateTime.Today.ToString("yyyy/MM/dd");
+}
+
+// タイトルラベル印刷前イベントハンドラ
+private void lblTitle_BeforePrint(object sender, EventArgs e)
+{
+    if (rowCount == 0)
+    {
+        lblTitle.ForeColor = System.Drawing.Color.Navy;
+    }
+}
+
+// 詳細セクション印刷前イベントハンドラ
+private void detail_BeforePrint(object sender, EventArgs e)
+{
+    rowCount++;
+    if (rowCount % 2 == 0)
+    {
+        detail.BackColor = System.Drawing.Color.LightGray;
+    }
+    else
+    {
+        detail.BackColor = System.Drawing.Color.White;
+    }
+}
+
+// 詳細セクションフォーマットイベントハンドラ
+private void detail_Format(object sender, EventArgs e)
+{
+    decimal amount = Convert.ToDecimal(txtAmount.Text.Replace("¥", "").Replace(",", ""));
+    decimal taxAmount = Math.Round(amount * 0.1m, 0);
+    txtTax.Text = "¥" + taxAmount.ToString("#,##0");
+}
+
+// 税額テキストボックス印刷前イベントハンドラ
+private void txtTax_BeforePrint(object sender, EventArgs e)
+{
+    decimal amount = Convert.ToDecimal(txtAmount.Text.Replace("¥", "").Replace(",", ""));
+    if (amount >= 100000)
+    {
+        txtTax.ForeColor = System.Drawing.Color.Red;
+    }
+    else
+    {
+        txtTax.ForeColor = System.Drawing.Color.Black;
+    }
+}
+
+// グループヘッダーフォーマットイベントハンドラ
+private void GroupHeader1_Format(object sender, EventArgs e)
+{
+    currentCategory = txtCategory.Text;
+    lblCategory.Text = "カテゴリ: " + currentCategory;
+}
+
+// グループフッターフォーマットイベントハンドラ
+private void GroupFooter1_Format(object sender, EventArgs e)
+{
+    decimal subTotal = Convert.ToDecimal(txtSubTotal.Text.Replace("¥", "").Replace(",", ""));
+    if (subTotal > 500000)
+    {
+        txtSubTotal.ForeColor = System.Drawing.Color.DarkGreen;
+        txtSubTotal.Font = new System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Bold);
+    }
+}
+
+// ページフッターフォーマットイベントハンドラ
+private void PageFooter_Format(object sender, EventArgs e)
+{
+    lblPage.Text = "ページ: " + this.CurrentPage.ToString() + " / " + this.PageCount.ToString();
+}
+
+// ページ番号テキストボックス印刷前イベントハンドラ
+private void txtPage_BeforePrint(object sender, EventArgs e)
+{
+    txtPage.Text = this.CurrentPage.ToString();
+}
+    ]]>
+  </Script>
+  <Events>
+    <Event Name="ReportStart" Handler="Report_ReportStart" />
+    <Event Name="ReportEnd" Handler="Report_ReportEnd" />
+    <Event Name="FetchData" Handler="Report_FetchData" />
+  </Events>
+</ActiveReport>

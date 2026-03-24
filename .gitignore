@@ -1,0 +1,20 @@
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# NuGet
+*.nupkg
+*.nuspec
+**/packages/
+!**/packages/build/
+
+# ActiveReports license cache
+GrapeCity.ActiveReports.licx
+licensemanager/
+
+# OS
+.DS_Store
+Thumbs.db
